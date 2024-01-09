@@ -20,20 +20,30 @@ namespace FacialRecognition.Controllers
 	{
 
 		[HttpPut("MatchFaces")]
-		public async Task<IActionResult> MatchFaces(IFormFile TrainImage, IFormFile PredictImage)
+		public async Task<IActionResult> MatchFaces(IFormFile TrainImage, IFormFile RandomImage, IFormFile PredictImage)
 		{
 			EigenFaceRecognizer recognizer = new EigenFaceRecognizer();
 			VectorOfMat TrainImageVecofMat = new VectorOfMat();
 			List<int> Labels = new List<int>();
-			Labels.Add(1);
+			
 			VectorOfInt vectorOfInt = new VectorOfInt();
+			Labels.Add(1);
+			Labels.Add(2);
 
 
 			using var StreamTrainImage = TrainImage.OpenReadStream();
+			using var StreamRandomImage = RandomImage.OpenReadStream();
 			var TrainbmpImage = new Bitmap(StreamTrainImage);
-			Image<Gray, Byte> TrainEmguImage = TrainbmpImage.ToImage<Bgr, Byte>().Resize(200, 200, Inter.Cubic).Convert<Gray, Byte>();
-			List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, byte>>();
+			var RandombmpImage = new Bitmap(StreamRandomImage);
+			Image<Gray, Byte> TrainEmguImage = TrainbmpImage.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic);
+			Image<Gray, Byte> RandomEmguImage = RandombmpImage.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic);
+
+			List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, Byte>>();
 			TrainedFaces.Add(TrainEmguImage);
+			TrainedFaces.Add(RandomEmguImage);
+
+
+
 			TrainImageVecofMat.Push(TrainedFaces.ToArray());
 			vectorOfInt.Push(Labels.ToArray());
 
@@ -41,17 +51,10 @@ namespace FacialRecognition.Controllers
 
 			using var PredictTrainImage = PredictImage.OpenReadStream();
 			var PredictbmpImage = new Bitmap(PredictTrainImage);
-			Image<Gray, Byte> PredictEmguImage = PredictbmpImage.ToImage<Bgr, Byte>().Resize(200, 200, Inter.Cubic).Convert<Gray, Byte>();
+			Image<Gray, byte> PredictEmguImage = PredictbmpImage.ToImage<Bgr, byte>().Resize(500, 500, Inter.Cubic).Convert<Gray, byte>();
 			var result = recognizer.Predict(PredictEmguImage);
-			if (result.Distance > 3000)
-			{
-				return Ok(true);
-			}
 
-			else
-			{
-				return Ok(false);
-			}
+			return result.Distance > 3000 ? Ok(true) : Ok(false);
 		
 
 
