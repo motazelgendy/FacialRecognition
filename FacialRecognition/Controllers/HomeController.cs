@@ -11,6 +11,7 @@ using Emgu.CV.CvEnum;
 using System;
 using static System.Net.Mime.MediaTypeNames;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Identity;
 
 namespace FacialRecognition.Controllers
 {
@@ -20,7 +21,7 @@ namespace FacialRecognition.Controllers
 	{
 
 		[HttpPut("MatchFaces")]
-		public async Task<IActionResult> MatchFaces(IFormFile TrainImage, IFormFile RandomImage, IFormFile PredictImage)
+		public async Task<IActionResult> MatchFaces(IFormFile RandomImage, IFormFile TrainImage, IFormFile PredictImage)
 		{
 			EigenFaceRecognizer recognizer = new EigenFaceRecognizer();
 			VectorOfMat TrainImageVecofMat = new VectorOfMat();
@@ -30,17 +31,26 @@ namespace FacialRecognition.Controllers
 			Labels.Add(1);
 			Labels.Add(2);
 
+			using var RandomStream = RandomImage.OpenReadStream();
+			using var ImageStream = TrainImage.OpenReadStream();
+			using var MemoryrandomStream = new MemoryStream();
+			using var MemoryTrainStream = new MemoryStream();
+			RandomStream.CopyTo(MemoryrandomStream);
+			ImageStream.CopyTo(MemoryTrainStream);
+			byte[] RandomBytes = MemoryrandomStream.ToArray();
+			byte[] TrainBytes = MemoryTrainStream.ToArray();
 
-			using var StreamTrainImage = TrainImage.OpenReadStream();
-			using var StreamRandomImage = RandomImage.OpenReadStream();
-			var TrainbmpImage = new Bitmap(StreamTrainImage);
-			var RandombmpImage = new Bitmap(StreamRandomImage);
-			Image<Gray, Byte> TrainEmguImage = TrainbmpImage.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic);
-			Image<Gray, Byte> RandomEmguImage = RandombmpImage.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic);
-
+			Mat RandomMat = new Mat();
+			Mat TrainMat =new Mat();
+			CvInvoke.Imdecode(RandomBytes, ImreadModes.Color, RandomMat);
+			CvInvoke.Imdecode(TrainBytes, ImreadModes.Color, TrainMat);
+			Image<Gray, Byte> RandomEmguImage = RandomMat.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic);
+			Image<Gray, Byte> TrainEmguImage = TrainMat.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic);
 			List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, Byte>>();
 			TrainedFaces.Add(TrainEmguImage);
 			TrainedFaces.Add(RandomEmguImage);
+		
+			
 
 
 
@@ -49,12 +59,17 @@ namespace FacialRecognition.Controllers
 
 			recognizer.Train(TrainImageVecofMat, vectorOfInt);
 
-			using var PredictTrainImage = PredictImage.OpenReadStream();
-			var PredictbmpImage = new Bitmap(PredictTrainImage);
-			Image<Gray, byte> PredictEmguImage = PredictbmpImage.ToImage<Bgr, byte>().Resize(500, 500, Inter.Cubic).Convert<Gray, byte>();
+			using var PredictStream = PredictImage.OpenReadStream();
+			using var MemoryPredictStream = new MemoryStream();
+			PredictStream.CopyTo(MemoryPredictStream);
+			byte[] PredictBytes = MemoryrandomStream.ToArray();
+			Mat PredictMat = new Mat();
+			CvInvoke.Imdecode(PredictBytes, ImreadModes.Color, PredictMat);
+
+			Image<Gray, byte> PredictEmguImage = PredictMat.ToImage<Bgr, byte>().Resize(500, 500, Inter.Cubic).Convert<Gray, byte>();
 			var result = recognizer.Predict(PredictEmguImage);
 
-			return result.Distance > 3000 ? Ok(true) : Ok(false);
+			return result.Distance > 3000 && result.Label == 1  ? Ok(true) : Ok(false);
 		
 
 
