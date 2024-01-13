@@ -3,7 +3,7 @@
 
 ## u can use it as Face Matching Tool by installing it as a Docker Container Image
 
-# Installing on Linux (Tested on Ubuntu 22.0 Jammy Jellyfish)
+# Installing on Linux (Tested on Ubuntu 22.04 Jammy Jellyfish)
 ## git Emgucv 
 ```
 git clone https://github.com/emgucv/emgucv emgucv
