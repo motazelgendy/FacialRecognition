@@ -1,7 +1,7 @@
 # FacialRecognition
-## This Tools using Emgucv as OpencCV Wrapper 
+## This Tools using Emgucv as OpenCV Wrapper 
 
-## this tool can be used as Face Matching Tool by installing it as a Docker Container
+## u can use it as Face Matching Tool by installing it as a Docker Container Image
 
 # Installing on Linux (Tested on Ubuntu 22.0 Jammy Jellyfish)
 ## git Emgucv 
