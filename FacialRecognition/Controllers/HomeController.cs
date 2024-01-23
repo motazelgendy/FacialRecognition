@@ -52,7 +52,6 @@ namespace FacialRecognition.Controllers
 			Image<Gray, Byte> SecondTrainEmguImage = SecondTrainMat.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
 			FitstTrainEmguImage.ROI = FirstImageFace[0];
 			Image<Gray, Byte> ROIFirstImage = FitstTrainEmguImage.Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
-			ROIFirstImage.Save("C:\\Users\\motaz\\Desktop\\train.jpg");
 			FitstTrainEmguImage.Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
 			List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, Byte>>();
 			TrainedFaces.Add(ROIFirstImage);
@@ -73,7 +72,6 @@ namespace FacialRecognition.Controllers
 			Image<Gray, byte> PredictEmguImage = PredictMat.ToImage<Gray, Byte>();
 				PredictEmguImage.ROI = PredictImageFace[0];
 			Image<Gray, Byte> ROIPredictImage = PredictEmguImage.Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
-			ROIPredictImage.Save("C:\\Users\\motaz\\Desktop\\predict.jpg");
 			var result = recognizer.Predict(ROIPredictImage);
 
 			return result.Label ==0 && result.Distance < 7000 ? Ok(true) : Ok(false);
