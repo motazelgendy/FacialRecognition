@@ -47,16 +47,9 @@ namespace FacialRecognition.Controllers
 			Image<Gray, Byte> ROIImage = TrainEmguImage.Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
 			EmguImages.Add(ROIImage);	
 			}
-
-
 			TrainImageVecofMat.Push(EmguImages.ToArray());
 			vectorOfInt.Push(Labels.ToArray());
-
-
-
-
 			recognizer.Train(TrainImageVecofMat, vectorOfInt);
-
 			 var PredictStream = PredictSample.OpenReadStream();
 			 var MemoryPredictStream = new MemoryStream();
 			PredictStream.CopyTo(MemoryPredictStream);
