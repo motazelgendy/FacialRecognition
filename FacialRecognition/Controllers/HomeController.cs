@@ -20,7 +20,7 @@ namespace FacialRecognition.Controllers
 
 
 		[HttpPut("MatchFaces")]
-		public async Task<IActionResult> MatchFaces(IFormFile FirstSample, IFormFile SecondSample, IFormFile PredictSample)
+		public async Task<IActionResult> MatchFaces(List <IFormFile> Listface, IFormFile PredictSample)
 		{
 
 			string HaarCascadePath = Directory.GetCurrentDirectory() + @"\haarcascade_frontalface_alt.xml";
@@ -29,35 +29,31 @@ namespace FacialRecognition.Controllers
 			VectorOfMat TrainImageVecofMat = new VectorOfMat();
 			List<int> Labels = new List<int>();
 			VectorOfInt vectorOfInt = new VectorOfInt();
-			Labels.Add(0);
-			Labels.Add(1);
 
-			var FirstStream = FirstSample.OpenReadStream();
-			var SecondStream = SecondSample.OpenReadStream();
-			var MemoryFirstStream = new MemoryStream();
-			var MemorySecondStream = new MemoryStream();
-			FirstStream.CopyTo(MemoryFirstStream);
-			SecondStream.CopyTo(MemorySecondStream);
-			byte[] FirstTrainBytes = MemoryFirstStream.ToArray();
-			byte[] SecondTrainBytes = MemorySecondStream.ToArray();
+			
+			List<Image<Gray, Byte>> EmguImages = new List<Image<Gray, byte>>();
+			for (int i=0; i< Listface.Count;i++)
+			{
+			Labels.Add(i);
+			using var stream = Listface[i].OpenReadStream();
+		    using var MemoryStream = new MemoryStream();
+			 stream.CopyTo(MemoryStream);
+			 byte[] TrainBytes = MemoryStream.ToArray();
+			Mat TrainMat = new Mat();
+			CvInvoke.Imdecode(TrainBytes, ImreadModes.Color, TrainMat);
+			Rectangle[] CorppedFace = faceCasacdeClassifier.DetectMultiScale(TrainMat, 1.1, 3, Size.Empty, Size.Empty);
+			Image<Gray, Byte> TrainEmguImage = TrainMat.ToImage<Gray, Byte>();
+			TrainEmguImage.ROI = CorppedFace[0];
+			Image<Gray, Byte> ROIImage = TrainEmguImage.Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
+			EmguImages.Add(ROIImage);	
+			}
 
-			Mat FirstTrainMat = new Mat();
-			Mat SecondTrainMat = new Mat();
 
-
-			CvInvoke.Imdecode(FirstTrainBytes, ImreadModes.Color, FirstTrainMat);
-			CvInvoke.Imdecode(SecondTrainBytes, ImreadModes.Color, SecondTrainMat);
-			Rectangle[] FirstImageFace = faceCasacdeClassifier.DetectMultiScale(FirstTrainMat, 1.1, 3, Size.Empty, Size.Empty);
-			Image<Gray, Byte> FitstTrainEmguImage = FirstTrainMat.ToImage<Gray, Byte>();
-			Image<Gray, Byte> SecondTrainEmguImage = SecondTrainMat.ToImage<Gray, Byte>().Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
-			FitstTrainEmguImage.ROI = FirstImageFace[0];
-			Image<Gray, Byte> ROIFirstImage = FitstTrainEmguImage.Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
-			FitstTrainEmguImage.Resize(500, 500, Inter.Cubic).Convert<Gray, Byte>();
-			List<Image<Gray, Byte>> TrainedFaces = new List<Image<Gray, Byte>>();
-			TrainedFaces.Add(ROIFirstImage);
-			TrainedFaces.Add(SecondTrainEmguImage);
-			TrainImageVecofMat.Push(TrainedFaces.ToArray());
+			TrainImageVecofMat.Push(EmguImages.ToArray());
 			vectorOfInt.Push(Labels.ToArray());
+
+
+
 
 			recognizer.Train(TrainImageVecofMat, vectorOfInt);
 
