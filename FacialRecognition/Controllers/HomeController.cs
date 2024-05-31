@@ -37,8 +37,8 @@ namespace FacialRecognition.Controllers
 			Labels.Add(i);
 			using var stream = Listface[i].OpenReadStream();
 		    using var MemoryStream = new MemoryStream();
-			 stream.CopyTo(MemoryStream);
-			 byte[] TrainBytes = MemoryStream.ToArray();
+			stream.CopyTo(MemoryStream);
+			byte[] TrainBytes = MemoryStream.ToArray();
 			Mat TrainMat = new Mat();
 			CvInvoke.Imdecode(TrainBytes, ImreadModes.Color, TrainMat);
 			Rectangle[] CorppedFace = faceCasacdeClassifier.DetectMultiScale(TrainMat, 1.1, 3, Size.Empty, Size.Empty);
